@@ -10,7 +10,6 @@
 #include <avr/pgmspace.h>
 #include "sounddata.h"
 
-int ledPin = 13;
 int speakerPin = 3;
 volatile uint16_t sample = 0;
 
@@ -46,8 +45,8 @@ ISR(TIMER1_COMPA_vect) {
   
     if(sample >= BUFF_SIZE) {
       if(sound_offset >= 10000) { sound_offset = 0; }
+      
         copyArray(sound_buffer, 400);
-        
         sound_offset += 400;
         sample = 0;
         //Serial.print("offset = ");
@@ -127,8 +126,7 @@ void setup() {
   digitalWrite(phonePort, HIGH);
 
   // sonund staff
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, HIGH);
+
   startPlayback();
   //end
   

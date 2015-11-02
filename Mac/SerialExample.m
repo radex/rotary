@@ -8,7 +8,7 @@
 	
 	[serialInputField becomeFirstResponder];
     
-    [self openSerialPort:@"/dev/cu.usbmodem1421" baud:230400];
+    [self openSerialPort:@"/dev/cu.usbmodem1411" baud:230400];
     [self performSelectorInBackground:@selector(incomingTextUpdateThread:) withObject:[NSThread currentThread]];
 }
 
