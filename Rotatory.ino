@@ -2,6 +2,7 @@
 #define HANDLE_LIFTED 1
 
 #define SAMPLE_RATE 8000
+#define BUFF_SIZE 400
 
 #include <stdint.h>
 #include <avr/interrupt.h>
@@ -11,10 +12,10 @@
 
 int ledPin = 13;
 int speakerPin = 3;
-volatile uint16_t sample;
+volatile uint16_t sample = 0;
 
-char sound_buffer[400];
-int sound_offset = 0;
+volatile unsigned char  sound_buffer[400];
+volatile uint16_t sound_offset = 0;
 
 int pulsarPort = 11;
 int switchPort = 12;
@@ -42,11 +43,19 @@ void stopPlayback()
 
 // This is called at 8000 Hz to load the next sample.
 ISR(TIMER1_COMPA_vect) {
-    if (sample >= sounddata_length) {
+  
+    if(sample >= BUFF_SIZE) {
+      if(sound_offset >= 10000) { sound_offset = 0; }
+        copyArray(sound_buffer, 400);
+        
+        sound_offset += 400;
         sample = 0;
-    }
-    else {
-            OCR2B = pgm_read_byte(&sounddata_data[sample]);           
+        //Serial.print("offset = ");
+        //Serial.println(sound_buffer[0]);
+    } else {
+            OCR2B = sound_buffer[sample];     
+//            OCR2B = pgm_read_byte(&sounddata_data[sound_offset + sample]);
+//            //Serial.println(sound_buffer[sample]);  
     }
 
     ++sample;
@@ -99,6 +108,8 @@ void startPlayback()
     
     sample = 0;
     sei();
+
+    copyArray(sound_buffer, 400);
 }
 
 
@@ -180,3 +191,13 @@ void handleStateChanged(int handle) {
     pulseCount = 0;
   }
 }
+
+void copyArray(volatile unsigned char * dest, uint16_t n) {
+     for(uint16_t i = 0; i < n; i++){
+//        Serial.println(pgm_read_byte(&sound_buffer[sample]));
+        dest[i] = pgm_read_byte(&sounddata_data[sound_offset + i]);
+     }
+}
+
+
+
