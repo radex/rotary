@@ -10,10 +10,11 @@
 #include "sounddata.h"
 
 int ledPin = 13;
-int speakerPin = 3; // Can be either 3 or 11, two PWM outputs connected to Timer 2
+int speakerPin = 3;
 volatile uint16_t sample;
-byte lastSample;
 
+char sound_buffer[400];
+int sound_offset = 0;
 
 int pulsarPort = 11;
 int switchPort = 12;
@@ -42,13 +43,7 @@ void stopPlayback()
 // This is called at 8000 Hz to load the next sample.
 ISR(TIMER1_COMPA_vect) {
     if (sample >= sounddata_length) {
-        if (sample == sounddata_length + lastSample) {
-            stopPlayback();
-            startPlayback();
-        }
-        else {
-                OCR2B = sounddata_length + lastSample - sample;                
-        }
+        sample = 0;
     }
     else {
             OCR2B = pgm_read_byte(&sounddata_data[sample]);           
@@ -101,8 +96,7 @@ void startPlayback()
 
     // Enable interrupt when TCNT1 == OCR1A (p.136)
     TIMSK1 |= _BV(OCIE1A);
-
-    lastSample = pgm_read_byte(&sounddata_data[sounddata_length-1]);
+    
     sample = 0;
     sei();
 }
@@ -110,7 +104,7 @@ void startPlayback()
 
 void setup() {
   // initialize digital pin 13 as an output.
-  Serial.begin(9600);
+  Serial.begin(230400);
   
   pinMode(pulsarPort, INPUT);
   digitalWrite(pulsarPort, HIGH);
@@ -122,11 +116,9 @@ void setup() {
   digitalWrite(phonePort, HIGH);
 
   // sonund staff
-
-   pinMode(ledPin, OUTPUT);
-   digitalWrite(ledPin, HIGH);
-   startPlayback();
-
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, HIGH);
+  startPlayback();
   //end
   
   delay(1);
